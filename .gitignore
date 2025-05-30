@@ -1,0 +1,16 @@
+# Node / Expo
+frontend/node_modules/
+frontend/.expo/
+frontend/.expo-shared/
+
+# Python
+backend/__pycache__/
+*.pyc
+venv/
+.env
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
