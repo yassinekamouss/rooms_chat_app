@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkRooms - Connexion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="header">
+            <i class="fas fa-comments"></i>
+            <h1>TalkRooms</h1>
+            <p>Connectez-vous instantanément</p>
+        </div>
+
+        <div class="form-container">
+            {% if request.args.get('error') %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ request.args.get('error') }}
+            </div>
+            {% endif %}
+
+            <form action="/join" method="POST" class="login-form">
+                <div class="input-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i>
+                        Nom d'utilisateur
+                    </label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Entrez votre nom" maxlength="50">
+                </div>
+
+                <div class="input-group">
+                    <label for="room">
+                        <i class="fas fa-door-open"></i>
+                        ID de la Room
+                    </label>
+                    <input type="text" id="room" name="room" required 
+                           placeholder="Entrez l'ID de la room" maxlength="50">
+                </div>
+
+                <button type="submit" class="join-button">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Rejoindre la Room
+                </button>
+            </form>
+
+            <div class="info">
+                <i class="fas fa-info-circle"></i>
+                <p>Connectez-vous en temps réel avec d'autres utilisateurs</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

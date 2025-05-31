@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkRooms - {{ room }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="room-info">
+                <i class="fas fa-users"></i>
+                <span class="room-name">#{{ room }}</span>
+                <div class="online-indicator">
+                    <div class="online-dot"></div>
+                    <span id="user-count">1 en ligne</span>
+                </div>
+            </div>
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ username }}</span>
+            </div>
+            <button class="leave-button" onclick="leaveRoom()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+
+        <div class="messages-container">
+            <div id="messages" class="messages-list"></div>
+        </div>
+
+        <div class="input-container">
+            <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                <i class="fas fa-pen"></i>
+                <span>Vous tapez...</span>
+            </div>
+            
+            <div class="input-wrapper">
+                <input type="text" id="message-input" placeholder="Tapez votre message..." maxlength="500">
+                <button id="send-button" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script>
+        // Variables globales
+        const USERNAME = '{{ username }}';
+        const ROOM = '{{ room }}';
+        
+        // Initialiser le chat
+        initializeChat(USERNAME, ROOM);
+    </script>
+</body>
+</html>

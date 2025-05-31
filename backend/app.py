@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template, redirect, url_for, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import redis
@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-2025'
 CORS(app, origins=["*"])
 
-# Configuration SocketIO avec engineio_logger pour déboguer
+# Configuration SocketIO
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*", 
@@ -34,13 +34,69 @@ except redis.ConnectionError:
 # Stockage des utilisateurs connectés
 connected_users = {}
 
+# ==================== ROUTES WEB ====================
+
 @app.route('/')
 def index():
-    return {"message": "Chat API is running", "status": "success"}
+    """Page d'accueil web"""
+    return render_template('index.html')
 
-@app.route('/health')
+@app.route('/chat')
+def chat_page():
+    """Page de chat web"""
+    username = request.args.get('username')
+    room = request.args.get('room')
+    
+    if not username or not room:
+        return redirect(url_for('index', error='Username et room requis'))
+    
+    return render_template('chat.html', username=username, room=room)
+
+@app.route('/join', methods=['POST'])
+def join_room_web():
+    """Traitement du formulaire de connexion web"""
+    username = request.form.get('username', '').strip()
+    room = request.form.get('room', '').strip()
+    
+    if not username or not room:
+        return redirect(url_for('index', error='Tous les champs sont requis'))
+    
+    return redirect(url_for('chat_page', username=username, room=room))
+
+# ==================== API ROUTES ====================
+
+@app.route('/api/health')
 def health():
+    """API de santé"""
     return {"status": "healthy", "redis": redis_client is not None}
+
+@app.route('/api/rooms')
+def get_rooms():
+    """Liste des rooms actives"""
+    if not redis_client:
+        return {"rooms": []}
+    
+    try:
+        # Rechercher toutes les rooms avec des utilisateurs
+        room_keys = redis_client.keys("room:*:users")
+        rooms = []
+        
+        for key in room_keys:
+            room_name = key.split(':')[1]
+            user_count = redis_client.scard(key)
+            if user_count > 0:
+                users = list(redis_client.smembers(key))
+                rooms.append({
+                    'name': room_name,
+                    'users': users,
+                    'user_count': user_count
+                })
+        
+        return {"rooms": rooms}
+    except Exception as e:
+        return {"error": str(e), "rooms": []}
+
+# ==================== SOCKET EVENTS ====================
 
 @socketio.on('connect')
 def handle_connect():
@@ -161,10 +217,17 @@ def handle_message(data):
         print(f"Erreur send_message: {e}")
         emit('error', {'message': f'Erreur: {str(e)}'})
 
+# ==================== HELPER FUNCTIONS ====================
+
 def save_message_to_redis(room_name, message):
     try:
+        # Sauvegarder le message
         redis_client.lpush(f"room:{room_name}:messages", json.dumps(message))
-        redis_client.ltrim(f"room:{room_name}:messages", 0, 99)  # Garder 100 messages max
+        redis_client.ltrim(f"room:{room_name}:messages", 0, 99)
+        
+        # NOUVEAU: Expiration automatique après 1 jours
+        redis_client.expire(f"room:{room_name}:messages", 24 * 3600)  # 1 jours
+        
     except Exception as e:
         print(f"Erreur sauvegarde Redis: {e}")
 
@@ -180,15 +243,16 @@ def get_room_messages(room_name, limit=50):
         return []
 
 if __name__ == '__main__':
-    print("🚀 Démarrage du serveur Flask-SocketIO...")
-    print("📡 Serveur accessible sur: http://0.0.0.0:5000")
-    print("🔧 Mode: Threading (compatible avec toutes les versions Python)")
+    print("Démarrage du serveur Flask-SocketIO...")
+    print("Serveur accessible sur: http://0.0.0.0:5000")
+    print("Interface web: http://localhost:5000")
+    print("API mobile: http://localhost:5000/api/*")
+    print("Mode: Threading (compatible avec toutes les versions Python)")
     
-    # Utiliser un serveur WSGI compatible WebSocket
     socketio.run(
         app, 
         host='0.0.0.0', 
         port=5000, 
-        debug=False,  # Désactiver le debug pour éviter les conflits
+        debug=False,
         use_reloader=False
     )

@@ -101,7 +101,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       >
         <View style={styles.headerContent}>
           <MaterialIcons name="chat-bubble" size={40} color="#FFFFFF" />
-          <Text style={styles.headerTitle}>ChatApp</Text>
+          <Text style={styles.headerTitle}>TalkRooms</Text>
           <Text style={styles.headerSubtitle}>Connectez-vous instantanément</Text>
         </View>
         
